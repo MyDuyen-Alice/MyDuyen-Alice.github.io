@@ -17,7 +17,7 @@ export const ui = {
     'nav.cv': 'Tải CV',
 
     'hero.title': 'Xin chào, tôi là',
-    'hero.name': 'Võ Ngọc Minh',
+    'hero.name': 'Lương Thị Mỹ Duyên',
     'hero.role': 'Aspiring Data Engineer',
     'hero.pitch':
       'Tôi là người trái ngành đang tự học Data Engineering — xây dựng pipeline, mô hình hóa dữ liệu, và đưa data trở thành công cụ ra quyết định.',
@@ -53,7 +53,7 @@ export const ui = {
     'contact.linkedin': 'LinkedIn',
 
     'footer.built': 'Xây dựng với Astro + Tailwind',
-    'footer.year': '© 2026 Võ Ngọc Minh',
+    'footer.year': '© 2026 Lương Thị Mỹ Duyên',
   },
   en: {
     'nav.home': 'Home',
@@ -64,7 +64,7 @@ export const ui = {
     'nav.cv': 'Download CV',
 
     'hero.title': "Hi, I'm",
-    'hero.name': 'Vo Ngoc Minh',
+    'hero.name': 'Luong Thi My Duyen',
     'hero.role': 'Aspiring Data Engineer',
     'hero.pitch':
       'Career-changer self-learning Data Engineering — building pipelines, modeling data, and turning raw data into decisions.',
@@ -101,7 +101,7 @@ export const ui = {
     'contact.linkedin': 'LinkedIn',
 
     'footer.built': 'Built with Astro + Tailwind',
-    'footer.year': '© 2026 Vo Ngoc Minh',
+    'footer.year': '© 2026 Luong Thi My Duyen',
   },
 } as const;
 
