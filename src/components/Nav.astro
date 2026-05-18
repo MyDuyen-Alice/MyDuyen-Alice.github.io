@@ -1,0 +1,107 @@
+---
+import type { Lang } from '../i18n/ui';
+import { t, pathFor, defaultLang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+  currentPath: string;
+}
+
+const { lang, currentPath } = Astro.props;
+
+const links: Array<{ key: Parameters<typeof t>[1]; path: string }> = [
+  { key: 'nav.home', path: '' },
+  { key: 'nav.about', path: 'about' },
+  { key: 'nav.projects', path: 'projects' },
+  { key: 'nav.blog', path: 'blog' },
+  { key: 'nav.contact', path: 'contact' },
+];
+
+const otherLang: Lang = lang === 'vi' ? 'en' : 'vi';
+
+function normalizePath(p: string): string {
+  if (!p) return '/';
+  const trimmed = p.replace(/\/+$/, '');
+  return trimmed === '' ? '/' : trimmed;
+}
+
+function isActive(href: string): boolean {
+  return normalizePath(href) === normalizePath(currentPath);
+}
+
+function switchLangPath(): string {
+  const pathWithoutLang = currentPath
+    .replace(/^\/en\/?/, '/')
+    .replace(/\/+$/, '');
+  const cleanPath = pathWithoutLang.replace(/^\/+/, '');
+  return pathFor(otherLang, cleanPath);
+}
+---
+
+<header class="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-50">
+  <nav class="mx-auto max-w-5xl px-6 py-4 flex items-center justify-between gap-4">
+    <a
+      href={pathFor(lang, '')}
+      class="font-bold text-lg tracking-tight text-emerald-400 hover:text-emerald-300 transition-colors"
+    >
+      VNM<span class="text-slate-500">.dev</span>
+    </a>
+
+    <ul class="hidden md:flex items-center gap-6 text-sm">
+      {
+        links.map((link) => {
+          const href = pathFor(lang, link.path);
+          const active = isActive(href);
+          return (
+            <li>
+              <a
+                href={href}
+                class:list={[
+                  'transition-colors',
+                  active
+                    ? 'text-emerald-400 font-medium'
+                    : 'text-slate-300 hover:text-white',
+                ]}
+              >
+                {t(lang, link.key)}
+              </a>
+            </li>
+          );
+        })
+      }
+    </ul>
+
+    <div class="flex items-center gap-3">
+      <a
+        href={switchLangPath()}
+        class="text-xs uppercase tracking-wider text-slate-400 hover:text-emerald-400 border border-slate-700 rounded px-2 py-1 transition-colors"
+        aria-label="Switch language"
+      >
+        {otherLang.toUpperCase()}
+      </a>
+    </div>
+  </nav>
+
+  <div class="md:hidden border-t border-slate-800">
+    <ul class="mx-auto max-w-5xl px-6 py-2 flex flex-wrap gap-4 text-sm">
+      {
+        links.map((link) => {
+          const href = pathFor(lang, link.path);
+          const active = isActive(href);
+          return (
+            <li>
+              <a
+                href={href}
+                class:list={[
+                  active ? 'text-emerald-400' : 'text-slate-300',
+                ]}
+              >
+                {t(lang, link.key)}
+              </a>
+            </li>
+          );
+        })
+      }
+    </ul>
+  </div>
+</header>

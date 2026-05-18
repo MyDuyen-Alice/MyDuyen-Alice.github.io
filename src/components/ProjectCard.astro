@@ -1,0 +1,62 @@
+---
+import type { Lang } from '../i18n/ui';
+import { t, pathFor } from '../i18n/ui';
+import type { Project } from '../data/projects';
+
+interface Props {
+  project: Project;
+  lang: Lang;
+}
+
+const { project, lang } = Astro.props;
+
+const statusClass = {
+  planned: 'bg-slate-800 text-slate-300',
+  inProgress: 'bg-amber-500/10 text-amber-400 ring-1 ring-amber-500/20',
+  completed: 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20',
+}[project.status];
+
+const statusLabel = t(lang, `projects.status.${project.status}` as Parameters<typeof t>[1]);
+const caseHref = pathFor(lang, `projects/${project.slug}`);
+---
+
+<article class="group rounded-xl border border-slate-800 bg-slate-900/50 p-6 hover:border-emerald-500/30 transition-colors">
+  <div class="flex items-start justify-between gap-3 mb-3">
+    <h3 class="text-xl font-semibold text-white group-hover:text-emerald-400 transition-colors">
+      <a href={caseHref}>{project.title[lang]}</a>
+    </h3>
+    <span class={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${statusClass}`}>
+      {statusLabel}
+    </span>
+  </div>
+  <p class="text-slate-400 text-sm mb-4">{project.tagline[lang]}</p>
+  <div class="flex flex-wrap gap-1.5 mb-4">
+    {
+      project.techStack.slice(0, 6).map((tech) => (
+        <span class="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-300">
+          {tech}
+        </span>
+      ))
+    }
+  </div>
+  <div class="flex items-center gap-4 text-sm">
+    <a
+      href={caseHref}
+      class="text-emerald-400 hover:text-emerald-300 transition-colors"
+    >
+      {t(lang, 'projects.viewCase')} →
+    </a>
+    {
+      project.repoUrl && (
+        <a
+          href={project.repoUrl}
+          target="_blank"
+          rel="noopener"
+          class="text-slate-400 hover:text-white transition-colors"
+        >
+          {t(lang, 'projects.viewRepo')} ↗
+        </a>
+      )
+    }
+  </div>
+</article>

@@ -1,0 +1,57 @@
+---
+import Layout from '../layouts/Layout.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import { t, pathFor } from '../i18n/ui';
+import { projects } from '../data/projects';
+
+const lang = 'vi' as const;
+const currentPath = '/';
+---
+
+<Layout lang={lang} title={t(lang, 'nav.home')} currentPath={currentPath}>
+  <section class="py-12 md:py-20">
+    <p class="text-emerald-400 mb-3 text-sm uppercase tracking-wider">
+      {t(lang, 'hero.title')}
+    </p>
+    <h1 class="text-4xl md:text-6xl font-bold tracking-tight text-white mb-4">
+      {t(lang, 'hero.name')}
+    </h1>
+    <p class="text-xl md:text-2xl text-slate-300 mb-6">
+      {t(lang, 'hero.role')}
+    </p>
+    <p class="text-slate-400 max-w-2xl text-lg leading-relaxed mb-8">
+      {t(lang, 'hero.pitch')}
+    </p>
+    <div class="flex flex-wrap gap-3">
+      <a
+        href={pathFor(lang, 'projects')}
+        class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-medium px-5 py-2.5 rounded-lg transition-colors"
+      >
+        {t(lang, 'hero.cta.projects')}
+      </a>
+      <a
+        href="/cv.pdf"
+        class="border border-slate-700 hover:border-emerald-500 text-slate-200 px-5 py-2.5 rounded-lg transition-colors"
+      >
+        {t(lang, 'hero.cta.cv')}
+      </a>
+    </div>
+  </section>
+
+  <section class="py-12 border-t border-slate-800">
+    <div class="flex items-end justify-between mb-8">
+      <h2 class="text-2xl md:text-3xl font-bold text-white">
+        {t(lang, 'projects.title')}
+      </h2>
+      <a
+        href={pathFor(lang, 'projects')}
+        class="text-emerald-400 hover:text-emerald-300 text-sm"
+      >
+        {t(lang, 'projects.title')} →
+      </a>
+    </div>
+    <div class="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+      {projects.map((p) => <ProjectCard project={p} lang={lang} />)}
+    </div>
+  </section>
+</Layout>

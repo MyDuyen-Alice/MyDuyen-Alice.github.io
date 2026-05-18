@@ -1,0 +1,108 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { t, pathFor } from '../../../i18n/ui';
+import { projects } from '../../../data/projects';
+
+export function getStaticPaths() {
+  return projects.map((project) => ({
+    params: { slug: project.slug },
+    props: { project },
+  }));
+}
+
+const { project } = Astro.props;
+const lang = 'en' as const;
+const currentPath = `/en/projects/${project.slug}`;
+
+const statusClass = {
+  planned: 'bg-slate-800 text-slate-300',
+  inProgress: 'bg-amber-500/10 text-amber-400 ring-1 ring-amber-500/20',
+  completed: 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20',
+}[project.status];
+const statusLabel = t(lang, `projects.status.${project.status}` as Parameters<typeof t>[1]);
+---
+
+<Layout lang={lang} title={project.title[lang]} currentPath={currentPath}>
+  <article class="py-8 md:py-12">
+    <a
+      href={pathFor(lang, 'projects')}
+      class="text-sm text-slate-400 hover:text-emerald-400 transition-colors"
+    >
+      ← {t(lang, 'projects.title')}
+    </a>
+
+    <div class="mt-4 flex items-start justify-between gap-4">
+      <h1 class="text-3xl md:text-5xl font-bold text-white">
+        {project.title[lang]}
+      </h1>
+      <span class={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${statusClass}`}>
+        {statusLabel}
+      </span>
+    </div>
+
+    <p class="mt-4 text-lg text-slate-300 max-w-3xl">
+      {project.tagline[lang]}
+    </p>
+
+    <div class="mt-8 grid gap-8 md:grid-cols-3">
+      <div class="md:col-span-2">
+        <h2 class="text-xl font-semibold text-white mb-3">Description</h2>
+        <p class="text-slate-300 leading-relaxed">
+          {project.description[lang]}
+        </p>
+
+        <h2 class="text-xl font-semibold text-white mt-8 mb-3">Highlights</h2>
+        <ul class="space-y-2">
+          {
+            project.highlights[lang].map((h) => (
+              <li class="flex gap-2 text-slate-300">
+                <span class="text-emerald-400 shrink-0">▸</span>
+                <span>{h}</span>
+              </li>
+            ))
+          }
+        </ul>
+
+        <div class="mt-8 rounded-lg border border-dashed border-slate-700 bg-slate-900/30 p-6">
+          <p class="text-sm text-slate-400">
+            🚧 Detailed case study (architecture diagram, code walkthrough,
+            results) will be added once the project ships. Follow progress on
+            GitHub.
+          </p>
+        </div>
+      </div>
+
+      <aside class="md:col-span-1">
+        <div class="rounded-lg border border-slate-800 bg-slate-900/50 p-5 space-y-4">
+          <div>
+            <h3 class="text-xs uppercase tracking-wider text-slate-500 mb-2">
+              {t(lang, 'projects.techStack')}
+            </h3>
+            <ul class="flex flex-wrap gap-1.5">
+              {
+                project.techStack.map((tech) => (
+                  <li class="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-200">
+                    {tech}
+                  </li>
+                ))
+              }
+            </ul>
+          </div>
+
+          {
+            project.repoUrl && (
+              <a
+                href={project.repoUrl}
+                target="_blank"
+                rel="noopener"
+                class="block w-full text-center bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-medium px-4 py-2 rounded-lg transition-colors"
+              >
+                {t(lang, 'projects.viewRepo')} ↗
+              </a>
+            )
+          }
+        </div>
+      </aside>
+    </div>
+  </article>
+</Layout>
