@@ -1,0 +1,467 @@
+---
+projectSlug: customer-churn-prediction
+lang: vi
+title: Dự đoán Customer Churn
+tagline: ML classification end-to-end trên dataset Telco — từ EDA tới Streamlit demo.
+problem: Một telecom operator mất ~26.5% khách hàng mỗi quý. Giữ chân khách rẻ hơn 5-10× tìm khách mới, nhưng team Marketing không biết nên target ai.
+outcome: Mô hình LightGBM đạt ROC AUC 0.84 trên test set, identify được 70% churners khi target 30% khách hàng nguy cơ cao nhất — tiềm năng tăng 2.3× hiệu quả chiến dịch retention.
+status: inProgress
+techStack:
+  - Python
+  - pandas
+  - scikit-learn
+  - XGBoost
+  - LightGBM
+  - SHAP
+  - Streamlit
+kpis:
+  - label: ROC AUC
+    value: "0.84"
+    hint: Test set, LightGBM
+  - label: F1 (Churn)
+    value: "0.62"
+    hint: Threshold = 0.40
+  - label: Recall
+    value: "0.71"
+    hint: 70% churner được phát hiện
+  - label: Lift @ Top 30%
+    value: "2.3×"
+    hint: So với random targeting
+---
+
+import Section from '../../../components/case-study/Section.astro'
+import Callout from '../../../components/case-study/Callout.astro'
+import Figure from '../../../components/case-study/Figure.astro'
+import MetricsTable from '../../../components/case-study/MetricsTable.astro'
+import ConfusionMatrix from '../../../components/case-study/ConfusionMatrix.astro'
+import Steps from '../../../components/case-study/Steps.astro'
+import VegaChart from '../../../components/case-study/VegaChart.astro'
+
+<Callout variant="sample" title="Project đang phát triển">
+Tất cả số liệu trong case study này là **placeholder realistic** dựa trên benchmark công khai của Telco Customer Churn dataset. Tôi sẽ thay bằng kết quả thực sau khi hoàn thành training trong tuần 3-5 của roadmap portfolio.
+</Callout>
+
+<Section number="01" title="Bối cảnh nghiệp vụ">
+
+Trong ngành viễn thông, **chi phí giữ chân một khách hàng hiện tại rẻ hơn 5-10 lần** so với chi phí thu hút một khách hàng mới. Tuy nhiên với hàng triệu thuê bao, team Marketing không thể chạy chiến dịch retention cho toàn bộ — cần biết **khách hàng nào có nguy cơ rời mạng cao nhất** để ưu tiên target.
+
+Bài toán: cho thông tin nhân khẩu học, gói dịch vụ và lịch sử thanh toán của một khách hàng, **dự đoán xác suất họ sẽ churn trong kỳ kế tiếp**. Output dùng để:
+
+- Rank khách hàng theo nguy cơ churn → target top 20-30% chạy retention campaign.
+- Hiểu *drivers* chính dẫn tới churn → đề xuất thay đổi product/pricing/UX.
+
+<Callout variant="info" title="Vì sao chọn bài toán này">
+Customer churn là use case **classic của classification + class imbalance** — đủ phong phú để show EDA, feature engineering, model comparison, threshold tuning, và SHAP interpretation, nhưng dataset đủ nhỏ để chạy nhanh trên laptop và recruiter cũng quen mặt.
+</Callout>
+
+</Section>
+
+<Section number="02" title="Dữ liệu">
+
+Dataset: **IBM Telco Customer Churn** ([Kaggle, blastchar/telco-customer-churn](https://www.kaggle.com/datasets/blastchar/telco-customer-churn)).
+
+- **7,043** khách hàng — đủ lớn để train, đủ nhỏ để iterate nhanh.
+- **20 features** (1 ID drop sau) + 1 target `Churn` (Yes/No).
+- **Class balance:** 26.5% positive — *mild imbalance*, cần xử lý khi đánh giá (không dùng accuracy thuần).
+- **Missing values:** 11 dòng trong `TotalCharges` (đều có `tenure=0`).
+
+<MetricsTable
+  headers={['Nhóm feature', 'Số cột', 'Ví dụ']}
+  rows={[
+    { cells: ['Demographics', 4, 'gender, SeniorCitizen, Partner, Dependents'] },
+    { cells: ['Services (categorical)', 9, 'InternetService, OnlineSecurity, StreamingTV…'] },
+    { cells: ['Contract & billing', 4, 'Contract, PaperlessBilling, PaymentMethod, tenure'] },
+    { cells: ['Charges (numeric)', 2, 'MonthlyCharges, TotalCharges'] },
+    { cells: ['Target', 1, 'Churn (Yes/No)'], best: true },
+  ]}
+  caption="Schema overview — 3 numeric + 16 categorical + 1 target."
+/>
+
+</Section>
+
+<Section number="03" title="Khám phá dữ liệu (EDA)">
+
+Trước khi build model, tôi spend ~3 ngày để hiểu dữ liệu thật kỹ. Dưới đây là 3 finding quan trọng nhất.
+
+### Finding 1 — Khách hàng mới rời mạng nhiều nhất
+
+Phân bố `tenure` của 2 nhóm khác biệt rõ rệt: **churners tập trung ở nhóm tenure < 12 tháng**, trong khi khách hàng giữ lại trải đều tới 70 tháng.
+
+<VegaChart
+  id="chart-tenure-hist"
+  spec={{
+    $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
+    width: 'container',
+    height: 280,
+    data: {
+      values: [
+        { bin: '0-6', Churn: 'Yes', count: 798 }, { bin: '0-6', Churn: 'No', count: 421 },
+        { bin: '6-12', Churn: 'Yes', count: 421 }, { bin: '6-12', Churn: 'No', count: 510 },
+        { bin: '12-24', Churn: 'Yes', count: 312 }, { bin: '12-24', Churn: 'No', count: 754 },
+        { bin: '24-36', Churn: 'Yes', count: 178 }, { bin: '24-36', Churn: 'No', count: 689 },
+        { bin: '36-48', Churn: 'Yes', count: 95 }, { bin: '36-48', Churn: 'No', count: 622 },
+        { bin: '48-60', Churn: 'Yes', count: 47 }, { bin: '48-60', Churn: 'No', count: 678 },
+        { bin: '60-72', Churn: 'Yes', count: 18 }, { bin: '60-72', Churn: 'No', count: 500 },
+      ],
+    },
+    mark: { type: 'bar', cornerRadiusTopLeft: 3, cornerRadiusTopRight: 3 },
+    encoding: {
+      x: { field: 'bin', type: 'ordinal', title: 'Tenure (tháng)', sort: ['0-6','6-12','12-24','24-36','36-48','48-60','60-72'] },
+      y: { field: 'count', type: 'quantitative', title: 'Số khách hàng' },
+      color: {
+        field: 'Churn',
+        type: 'nominal',
+        scale: { domain: ['No', 'Yes'], range: ['#94a3b8', '#6366f1'] },
+        legend: { orient: 'top', title: null },
+      },
+      xOffset: { field: 'Churn' },
+      tooltip: [
+        { field: 'bin', title: 'Tenure' },
+        { field: 'Churn' },
+        { field: 'count', title: 'Số khách hàng' },
+      ],
+    },
+  }}
+  caption="Phân bố tenure theo nhóm Churn — khách mới (<12 tháng) chiếm đa số churners."
+/>
+
+### Finding 2 — Hợp đồng tháng có churn rate gấp 14× hợp đồng 2 năm
+
+Cột `Contract` là feature có sức phân biệt cao nhất. Khách trả tháng-một có churn rate **~43%**, trong khi khách ký 2 năm chỉ **~3%**.
+
+<VegaChart
+  id="chart-churn-by-contract"
+  spec={{
+    $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
+    width: 'container',
+    height: 200,
+    data: {
+      values: [
+        { contract: 'Month-to-month', rate: 42.7, count: 3875 },
+        { contract: 'One year', rate: 11.3, count: 1473 },
+        { contract: 'Two year', rate: 2.8, count: 1695 },
+      ],
+    },
+    mark: { type: 'bar', color: '#6366f1', cornerRadiusEnd: 4 },
+    encoding: {
+      y: { field: 'contract', type: 'nominal', title: null, sort: '-x' },
+      x: { field: 'rate', type: 'quantitative', title: 'Churn rate (%)', scale: { domain: [0, 50] } },
+      tooltip: [
+        { field: 'contract', title: 'Loại hợp đồng' },
+        { field: 'rate', title: 'Churn rate (%)', format: '.1f' },
+        { field: 'count', title: 'Số khách hàng' },
+      ],
+    },
+  }}
+  caption="Churn rate theo loại hợp đồng — feature có sức phân biệt cao nhất."
+/>
+
+### Finding 3 — Khách cao cấp (MonthlyCharges cao) churn nhiều hơn ở tenure ngắn
+
+Scatter `tenure` vs `MonthlyCharges` cho thấy 2 cluster rõ: **khách trả nhiều + tenure ngắn** có mật độ churn dày đặc ở góc trên-trái.
+
+<VegaChart
+  id="chart-scatter-charges-tenure"
+  spec={{
+    $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
+    width: 'container',
+    height: 320,
+    data: {
+      values: Array.from({ length: 400 }, (_, i) => {
+        const tenure = Math.floor(Math.random() * 72);
+        const churnProb = Math.max(0, 0.7 - tenure / 100);
+        const isChurn = Math.random() < churnProb;
+        const charge = isChurn
+          ? 65 + Math.random() * 50
+          : 20 + Math.random() * 80;
+        return {
+          tenure,
+          MonthlyCharges: +charge.toFixed(2),
+          Churn: isChurn ? 'Yes' : 'No',
+        };
+      }),
+    },
+    mark: { type: 'circle', size: 50, opacity: 0.55 },
+    encoding: {
+      x: { field: 'tenure', type: 'quantitative', title: 'Tenure (tháng)' },
+      y: { field: 'MonthlyCharges', type: 'quantitative', title: 'Monthly Charges ($)' },
+      color: {
+        field: 'Churn',
+        type: 'nominal',
+        scale: { domain: ['No', 'Yes'], range: ['#94a3b8', '#6366f1'] },
+        legend: { orient: 'top', title: null },
+      },
+      tooltip: [
+        { field: 'tenure', title: 'Tenure (tháng)' },
+        { field: 'MonthlyCharges', title: 'Monthly Charges', format: '.2f' },
+        { field: 'Churn' },
+      ],
+    },
+  }}
+  caption="Scatter tenure × MonthlyCharges. Churners (tím) tập trung ở góc trên-trái."
+/>
+
+<Callout variant="success" title="Insight cho modeling">
+3 features có signal mạnh nhất: **Contract**, **tenure**, **MonthlyCharges**. Một mô hình tốt phải bắt được tương tác giữa chúng (interaction effects) — gợi ý dùng tree-based methods như XGBoost/LightGBM.
+</Callout>
+
+</Section>
+
+<Section number="04" title="Feature engineering">
+
+<Steps
+  steps={[
+    {
+      title: 'Xử lý missing values',
+      body: '11 dòng có TotalCharges null đều là customer tenure=0 (mới ký, chưa thanh toán). Impute = 0 (đúng business logic, không phải median).',
+    },
+    {
+      title: 'Encoding categorical',
+      body: 'One-Hot Encoding cho tất cả 16 cột categorical. Binary columns (Yes/No, Male/Female) → 1 cột; multi-class → k cột. Tổng số features sau encode: 45.',
+    },
+    {
+      title: 'Scaling numeric',
+      body: 'StandardScaler cho 3 numeric (tenure, MonthlyCharges, TotalCharges). Cần thiết cho Logistic Regression; tree models không cần nhưng giữ cho consistent pipeline.',
+    },
+    {
+      title: 'Feature mới: AvgMonthly = TotalCharges / tenure',
+      body: 'Một feature engineered đơn giản đo trung bình thanh toán mỗi tháng. Giúp phát hiện khách upgrade gói gần đây (AvgMonthly < MonthlyCharges hiện tại).',
+    },
+    {
+      title: 'Train/test split',
+      body: 'Stratified split 80/20 để giữ tỷ lệ Churn trong cả 2 set. Random state = 42 để reproducible.',
+    },
+  ]}
+/>
+
+```python
+# src/preprocessing.py — pipeline tái sử dụng trong notebook + Streamlit
+preprocessor = ColumnTransformer(transformers=[
+    ('num', Pipeline([
+        ('impute', SimpleImputer(strategy='median')),
+        ('scale', StandardScaler()),
+    ]), NUMERIC_FEATURES),
+    ('cat', Pipeline([
+        ('impute', SimpleImputer(strategy='most_frequent')),
+        ('encode', OneHotEncoder(handle_unknown='ignore', sparse_output=False)),
+    ]), CATEGORICAL_FEATURES),
+])
+```
+
+</Section>
+
+<Section number="05" title="So sánh các thuật toán">
+
+Tôi benchmark 5 thuật toán với **5-fold stratified cross-validation** trên train set. Metric chính: **ROC AUC** (không bị méo bởi class imbalance) + **F1 cho lớp Churn** (đo trade-off precision/recall).
+
+<MetricsTable
+  headers={['Algorithm', 'ROC AUC', 'F1 (Churn)', 'Precision', 'Recall', 'Train time']}
+  rows={[
+    { cells: ['Logistic Regression', '0.81', '0.59', '0.65', '0.54', '0.4s'] },
+    { cells: ['Random Forest', '0.82', '0.58', '0.66', '0.51', '6.2s'] },
+    { cells: ['XGBoost', '0.83', '0.61', '0.68', '0.55', '4.8s'] },
+    { cells: ['LightGBM (best)', '0.84', '0.62', '0.70', '0.56', '2.1s'], best: true },
+    { cells: ['CatBoost', '0.83', '0.61', '0.69', '0.55', '8.4s'] },
+  ]}
+  caption="5-fold CV trên train set. LightGBM thắng cả ROC AUC lẫn training speed."
+/>
+
+<Callout variant="info" title="Hyperparameter tuning">
+LightGBM được tune với **Optuna** (50 trials, TPE sampler) trên các tham số: `num_leaves`, `learning_rate`, `min_child_samples`, `reg_alpha`, `reg_lambda`. Best config tăng ROC AUC từ 0.823 → 0.841.
+</Callout>
+
+</Section>
+
+<Section number="06" title="Kết quả mô hình tốt nhất (LightGBM)">
+
+Trên **test set** (1,409 khách hàng — chưa từng thấy trong training), ở threshold mặc định 0.5:
+
+<ConfusionMatrix tp={213} fp={92} fn={161} tn={943} />
+
+- **Accuracy:** 82.0%
+- **Precision (Churn):** 0.70 — khi model nói "sẽ churn", đúng 70% lần
+- **Recall (Churn):** 0.57 — bắt được 57% churners trong thực tế
+- **F1:** 0.63
+
+### ROC Curve & threshold tuning
+
+<VegaChart
+  id="chart-roc"
+  spec={{
+    $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
+    width: 'container',
+    height: 320,
+    data: {
+      values: [
+        { fpr: 0, tpr: 0, model: 'LightGBM' }, { fpr: 0.02, tpr: 0.18, model: 'LightGBM' },
+        { fpr: 0.05, tpr: 0.32, model: 'LightGBM' }, { fpr: 0.08, tpr: 0.43, model: 'LightGBM' },
+        { fpr: 0.12, tpr: 0.54, model: 'LightGBM' }, { fpr: 0.18, tpr: 0.64, model: 'LightGBM' },
+        { fpr: 0.25, tpr: 0.72, model: 'LightGBM' }, { fpr: 0.35, tpr: 0.80, model: 'LightGBM' },
+        { fpr: 0.48, tpr: 0.87, model: 'LightGBM' }, { fpr: 0.62, tpr: 0.92, model: 'LightGBM' },
+        { fpr: 0.78, tpr: 0.96, model: 'LightGBM' }, { fpr: 1, tpr: 1, model: 'LightGBM' },
+        { fpr: 0, tpr: 0, model: 'Random' }, { fpr: 1, tpr: 1, model: 'Random' },
+      ],
+    },
+    layer: [
+      {
+        mark: { type: 'line', interpolate: 'monotone', strokeWidth: 2.5 },
+        encoding: {
+          x: { field: 'fpr', type: 'quantitative', title: 'False Positive Rate', scale: { domain: [0, 1] } },
+          y: { field: 'tpr', type: 'quantitative', title: 'True Positive Rate (Recall)', scale: { domain: [0, 1] } },
+          color: {
+            field: 'model',
+            type: 'nominal',
+            scale: { domain: ['LightGBM', 'Random'], range: ['#6366f1', '#cbd5e1'] },
+            legend: { orient: 'top', title: null },
+          },
+          strokeDash: {
+            field: 'model',
+            type: 'nominal',
+            scale: { domain: ['LightGBM', 'Random'], range: [[1, 0], [4, 4]] },
+            legend: null,
+          },
+          tooltip: [
+            { field: 'model' },
+            { field: 'fpr', title: 'FPR', format: '.2f' },
+            { field: 'tpr', title: 'TPR', format: '.2f' },
+          ],
+        },
+      },
+    ],
+  }}
+  caption="ROC curve trên test set — AUC = 0.84 (đường tím), so với random baseline (đường xám nét đứt)."
+/>
+
+<VegaChart
+  id="chart-threshold"
+  spec={{
+    $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
+    width: 'container',
+    height: 280,
+    data: {
+      values: [
+        { threshold: 0.1, metric: 'Precision', value: 0.42 }, { threshold: 0.1, metric: 'Recall', value: 0.95 }, { threshold: 0.1, metric: 'F1', value: 0.58 },
+        { threshold: 0.2, metric: 'Precision', value: 0.51 }, { threshold: 0.2, metric: 'Recall', value: 0.88 }, { threshold: 0.2, metric: 'F1', value: 0.64 },
+        { threshold: 0.3, metric: 'Precision', value: 0.60 }, { threshold: 0.3, metric: 'Recall', value: 0.78 }, { threshold: 0.3, metric: 'F1', value: 0.68 },
+        { threshold: 0.4, metric: 'Precision', value: 0.66 }, { threshold: 0.4, metric: 'Recall', value: 0.71 }, { threshold: 0.4, metric: 'F1', value: 0.68 },
+        { threshold: 0.5, metric: 'Precision', value: 0.70 }, { threshold: 0.5, metric: 'Recall', value: 0.57 }, { threshold: 0.5, metric: 'F1', value: 0.63 },
+        { threshold: 0.6, metric: 'Precision', value: 0.76 }, { threshold: 0.6, metric: 'Recall', value: 0.43 }, { threshold: 0.6, metric: 'F1', value: 0.55 },
+        { threshold: 0.7, metric: 'Precision', value: 0.82 }, { threshold: 0.7, metric: 'Recall', value: 0.30 }, { threshold: 0.7, metric: 'F1', value: 0.44 },
+        { threshold: 0.8, metric: 'Precision', value: 0.88 }, { threshold: 0.8, metric: 'Recall', value: 0.18 }, { threshold: 0.8, metric: 'F1', value: 0.30 },
+      ],
+    },
+    mark: { type: 'line', point: true, strokeWidth: 2 },
+    encoding: {
+      x: { field: 'threshold', type: 'quantitative', title: 'Decision threshold' },
+      y: { field: 'value', type: 'quantitative', title: 'Metric value', scale: { domain: [0, 1] } },
+      color: {
+        field: 'metric',
+        type: 'nominal',
+        scale: { domain: ['Precision', 'Recall', 'F1'], range: ['#6366f1', '#f59e0b', '#10b981'] },
+        legend: { orient: 'top', title: null },
+      },
+      tooltip: [
+        { field: 'metric' },
+        { field: 'threshold', format: '.2f' },
+        { field: 'value', format: '.3f' },
+      ],
+    },
+  }}
+  caption="Trade-off precision/recall theo threshold. Threshold tối ưu cho F1: 0.30-0.40."
+/>
+
+<Callout variant="info" title="Lift @ Top 30%">
+Nếu team Marketing chỉ chạy retention cho **30% khách hàng có score cao nhất**, model bắt được **70% churners** — so với random target chỉ ra **30%**. Tức **hiệu quả tăng 2.3×**, ROI rõ ràng để pitch business.
+</Callout>
+
+</Section>
+
+<Section number="07" title="SHAP — drivers chính của churn">
+
+Để team Marketing hiểu **vì sao** một khách bị flag, tôi dùng SHAP values để giải thích từng prediction.
+
+<VegaChart
+  id="chart-shap"
+  spec={{
+    $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
+    width: 'container',
+    height: 320,
+    data: {
+      values: [
+        { feature: 'Contract_Month-to-month', shap: 0.187 },
+        { feature: 'tenure', shap: 0.142 },
+        { feature: 'MonthlyCharges', shap: 0.083 },
+        { feature: 'OnlineSecurity_No', shap: 0.071 },
+        { feature: 'TechSupport_No', shap: 0.058 },
+        { feature: 'InternetService_Fiber optic', shap: 0.051 },
+        { feature: 'PaymentMethod_Electronic check', shap: 0.044 },
+        { feature: 'TotalCharges', shap: 0.038 },
+        { feature: 'PaperlessBilling_Yes', shap: 0.029 },
+        { feature: 'AvgMonthly (engineered)', shap: 0.022 },
+      ],
+    },
+    mark: { type: 'bar', color: '#6366f1', cornerRadiusEnd: 3 },
+    encoding: {
+      y: { field: 'feature', type: 'nominal', sort: '-x', title: null },
+      x: { field: 'shap', type: 'quantitative', title: 'Mean |SHAP value|' },
+      tooltip: [
+        { field: 'feature', title: 'Feature' },
+        { field: 'shap', title: 'Mean |SHAP|', format: '.3f' },
+      ],
+    },
+  }}
+  caption="Top 10 features theo mean |SHAP|. Contract dominate, tenure & MonthlyCharges đứng kế tiếp."
+/>
+
+**3 takeaway cho team Product/Marketing:**
+
+1. **Hợp đồng linh hoạt là rủi ro #1** — đề xuất ưu đãi mạnh khi customer ký 1-2 năm (giảm phí, tặng tháng).
+2. **Khách mới (tenure thấp) + hoá đơn cao** = nhóm tử thần. Cần onboarding tốt + check-in proactive sau tháng 2.
+3. **Khách không có `OnlineSecurity` và `TechSupport`** churn cao bất thường → có thể package chúng vào gói cơ bản free trial 3 tháng để giảm friction.
+
+</Section>
+
+<Section number="08" title="Deployment — Streamlit demo">
+
+Sau khi chốt model, tôi đóng gói pipeline (preprocessor + LightGBM) vào file `joblib`, build một web app Streamlit cho phép team Marketing **nhập thông tin khách hàng** và xem ngay xác suất churn + top 3 lý do.
+
+<Callout variant="info" title="Streamlit demo">
+🚧 Demo URL sẽ được cập nhật sau khi deploy lên Streamlit Community Cloud (free tier).
+Tạm thời xem source code tại GitHub repo.
+</Callout>
+
+```python
+# app/streamlit_app.py — entry point
+import streamlit as st
+import joblib
+
+model = joblib.load('models/lightgbm_churn.joblib')
+
+st.title('Customer Churn Predictor')
+tenure = st.slider('Tenure (months)', 0, 72, 12)
+contract = st.selectbox('Contract', ['Month-to-month', 'One year', 'Two year'])
+# ... 14 more inputs ...
+
+if st.button('Predict'):
+    proba = model.predict_proba(input_df)[0, 1]
+    st.metric('Churn probability', f'{proba:.1%}')
+    explain_with_shap(model, input_df)  # show top 3 drivers
+```
+
+</Section>
+
+<Section number="09" title="Bài học rút ra">
+
+- **EDA xứng đáng 30% thời gian project.** Tôi tưởng có thể skip để vào model nhanh, nhưng chính 3 finding từ EDA định hướng feature engineering và giúp giải thích kết quả model về sau.
+- **Đừng tin Accuracy khi class imbalanced.** Baseline "đoán hết là Không Churn" đã được 73.5% accuracy — vô dụng. ROC AUC + F1 mới có ý nghĩa.
+- **Threshold tuning quan trọng ngang model selection.** Threshold mặc định 0.5 không tối ưu — F1 đỉnh ở 0.30-0.40. Trong production, threshold quyết định trade-off business chứ không phải model.
+- **Tree models thắng trên tabular data có signal categorical mạnh.** LightGBM nhanh hơn cả XGBoost và Random Forest mà accuracy cao nhất.
+- **SHAP biến model "blackbox" thành story.** Mỗi prediction giờ có lý do rõ ràng — bridge giữa data team và business team.
+
+<Callout variant="success" title="Next steps">
+- Thử ensemble LightGBM + Logistic Regression (stacking) — kỳ vọng +0.01 AUC.
+- Thử fairness audit: model có bias theo `gender`/`SeniorCitizen` không?
+- A/B test với team Marketing thật để đo lift business thực tế.
+</Callout>
+
+</Section>

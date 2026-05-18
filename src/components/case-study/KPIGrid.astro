@@ -1,0 +1,19 @@
+---
+import KPICard from './KPICard.astro';
+
+interface KPI {
+  label: string;
+  value: string;
+  hint?: string;
+}
+
+interface Props {
+  kpis: KPI[];
+}
+
+const { kpis } = Astro.props;
+---
+
+<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 my-6">
+  {kpis.map((k) => <KPICard label={k.label} value={k.value} hint={k.hint} />)}
+</div>

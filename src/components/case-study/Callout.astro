@@ -1,0 +1,54 @@
+---
+type Variant = 'info' | 'success' | 'warning' | 'sample';
+
+interface Props {
+  variant?: Variant;
+  title?: string;
+}
+
+const { variant = 'info', title } = Astro.props;
+
+const styles: Record<
+  Variant,
+  { wrap: string; icon: string; label: string }
+> = {
+  info: {
+    wrap: 'border-indigo-200 bg-indigo-50/60',
+    icon: '💡',
+    label: 'text-indigo-700',
+  },
+  success: {
+    wrap: 'border-emerald-200 bg-emerald-50/60',
+    icon: '✓',
+    label: 'text-emerald-700',
+  },
+  warning: {
+    wrap: 'border-amber-200 bg-amber-50/60',
+    icon: '⚠',
+    label: 'text-amber-800',
+  },
+  sample: {
+    wrap: 'border-dashed border-slate-300 bg-slate-50',
+    icon: '📝',
+    label: 'text-slate-600',
+  },
+};
+
+const s = styles[variant];
+---
+
+<aside class={`not-prose my-5 rounded-lg border ${s.wrap} p-4`}>
+  <div class="flex gap-3">
+    <span class="text-lg leading-6 shrink-0" aria-hidden="true">{s.icon}</span>
+    <div class="flex-1 min-w-0">
+      {title && (
+        <p class={`text-xs uppercase tracking-wider font-semibold mb-1 ${s.label}`}>
+          {title}
+        </p>
+      )}
+      <div class="text-sm text-slate-700 leading-relaxed [&>p]:m-0 [&>p+p]:mt-2">
+        <slot />
+      </div>
+    </div>
+  </div>
+</aside>

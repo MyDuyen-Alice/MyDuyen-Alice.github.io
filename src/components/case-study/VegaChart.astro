@@ -1,0 +1,35 @@
+---
+interface Props {
+  id: string;
+  spec: object;
+  caption?: string;
+  height?: number;
+}
+
+const { id, spec, caption, height = 320 } = Astro.props;
+
+const specJson = JSON.stringify(spec);
+---
+
+<figure class="not-prose my-6">
+  <div
+    class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm overflow-hidden"
+  >
+    <div
+      id={id}
+      class="vega-chart w-full"
+      style={`min-height: ${height}px;`}
+      data-vega-target={id}
+    >
+      <div class="flex h-full min-h-[240px] items-center justify-center text-sm text-slate-400">
+        Loading chart…
+      </div>
+    </div>
+  </div>
+  <script type="application/json" data-vega-spec={id} set:html={specJson} />
+  {caption && (
+    <figcaption class="mt-2 text-sm text-slate-500 text-center">
+      {caption}
+    </figcaption>
+  )}
+</figure>

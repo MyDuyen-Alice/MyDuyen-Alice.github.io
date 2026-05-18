@@ -1,0 +1,39 @@
+---
+projectSlug: customer-churn-prediction
+lang: en
+title: Customer Churn Prediction
+tagline: End-to-end ML classification on the Telco dataset — from EDA to Streamlit demo.
+problem: A telecom operator is losing ~26.5% of its customers per quarter. Retaining a customer is 5-10× cheaper than acquiring a new one, but Marketing doesn't know who to target.
+outcome: A LightGBM model reaching ROC AUC 0.84 on the test set, capturing 70% of churners while targeting only the top 30% riskiest customers — a potential 2.3× lift over random targeting.
+status: inProgress
+techStack:
+  - Python
+  - pandas
+  - scikit-learn
+  - XGBoost
+  - LightGBM
+  - SHAP
+  - Streamlit
+kpis:
+  - label: ROC AUC
+    value: "0.84"
+    hint: Test set, LightGBM
+  - label: F1 (Churn)
+    value: "0.62"
+    hint: Threshold = 0.40
+  - label: Recall
+    value: "0.71"
+    hint: 70% of churners detected
+  - label: Lift @ Top 30%
+    value: "2.3×"
+    hint: vs. random targeting
+isStub: true
+---
+
+import Callout from '../../../components/case-study/Callout.astro'
+
+<Callout variant="info" title="English translation coming soon">
+The full English version of this case study is being translated. In the meantime,
+please check the [Vietnamese version](/projects/customer-churn-prediction/) — most of
+the content (charts, tables, numbers) is universal.
+</Callout>

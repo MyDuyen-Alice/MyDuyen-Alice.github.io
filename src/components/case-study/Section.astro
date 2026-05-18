@@ -1,0 +1,26 @@
+---
+interface Props {
+  number: string;
+  title: string;
+  subtitle?: string;
+  id?: string;
+}
+
+const { number, title, subtitle, id } = Astro.props;
+const sectionId = id ?? `section-${number}`;
+---
+
+<section id={sectionId} class="mt-16 scroll-mt-24">
+  <div class="flex items-baseline gap-3 mb-2">
+    <span class="font-mono text-sm text-indigo-600 font-semibold">
+      {number}
+    </span>
+    <h2 class="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
+      {title}
+    </h2>
+  </div>
+  {subtitle && <p class="text-slate-600 mb-6 max-w-3xl">{subtitle}</p>}
+  <div class="prose prose-slate max-w-none prose-headings:font-bold prose-h3:text-lg prose-h3:text-slate-900 prose-p:text-slate-700 prose-p:leading-relaxed prose-li:text-slate-700 prose-strong:text-slate-900 prose-code:text-indigo-700 prose-code:bg-indigo-50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-medium prose-code:before:hidden prose-code:after:hidden prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline mt-4">
+    <slot />
+  </div>
+</section>

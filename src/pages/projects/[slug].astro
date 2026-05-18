@@ -1,29 +1,52 @@
 ---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
+import Hero from '../../components/case-study/Hero.astro';
 import { t, pathFor } from '../../i18n/ui';
 import { projects } from '../../data/projects';
 
-export function getStaticPaths() {
+export async function getStaticPaths() {
+  const allCaseStudies = await getCollection('case-studies');
   return projects.map((project) => ({
     params: { slug: project.slug },
-    props: { project },
+    props: {
+      project,
+      entry: allCaseStudies.find(
+        (e) => e.data.projectSlug === project.slug && e.data.lang === 'vi'
+      ),
+    },
   }));
 }
 
-const { project } = Astro.props;
+const { project, entry } = Astro.props as {
+  project: (typeof projects)[number];
+  entry: CollectionEntry<'case-studies'> | undefined;
+};
 const lang = 'vi' as const;
 const currentPath = `/projects/${project.slug}`;
 
-const statusClass = {
+const hasFullCase = entry && !entry.data.isStub;
+const Content = hasFullCase ? (await render(entry!)).Content : null;
+
+const statusLabel = t(
+  lang,
+  `projects.status.${project.status}` as Parameters<typeof t>[1]
+);
+
+const fallbackStatusClass = {
   planned: 'bg-slate-100 text-slate-600 ring-1 ring-slate-200',
   inProgress: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
   completed: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
 }[project.status];
-const statusLabel = t(lang, `projects.status.${project.status}` as Parameters<typeof t>[1]);
 ---
 
-<Layout lang={lang} title={project.title[lang]} currentPath={currentPath}>
-  <article class="py-8 md:py-12">
+<Layout
+  lang={lang}
+  title={entry?.data.title ?? project.title[lang]}
+  description={entry?.data.tagline ?? project.tagline[lang]}
+  currentPath={currentPath}
+>
+  <article class="py-2 md:py-4">
     <a
       href={pathFor(lang, 'projects')}
       class="text-sm text-slate-500 hover:text-indigo-600 transition-colors"
@@ -31,78 +54,114 @@ const statusLabel = t(lang, `projects.status.${project.status}` as Parameters<ty
       ← {t(lang, 'projects.title')}
     </a>
 
-    <div class="mt-4 flex items-start justify-between gap-4">
-      <h1 class="text-3xl md:text-5xl font-bold text-slate-900">
-        {project.title[lang]}
-      </h1>
-      <span class={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${statusClass}`}>
-        {statusLabel}
-      </span>
-    </div>
-
-    <p class="mt-4 text-lg text-slate-700 max-w-3xl">
-      {project.tagline[lang]}
-    </p>
-
-    <div class="mt-8 grid gap-8 md:grid-cols-3">
-      <div class="md:col-span-2">
-        <h2 class="text-xl font-semibold text-slate-900 mb-3">Mô tả</h2>
-        <p class="text-slate-700 leading-relaxed">
-          {project.description[lang]}
-        </p>
-
-        <h2 class="text-xl font-semibold text-slate-900 mt-8 mb-3">Điểm nổi bật</h2>
-        <ul class="space-y-2">
-          {
-            project.highlights[lang].map((h) => (
-              <li class="flex gap-2 text-slate-700">
-                <span class="text-indigo-500 shrink-0">▸</span>
-                <span>{h}</span>
-              </li>
-            ))
-          }
-        </ul>
-
-        <div class="mt-8 rounded-lg border border-dashed border-slate-300 bg-white/60 p-6">
-          <p class="text-sm text-slate-500">
-            🚧 Case study chi tiết (architecture diagram, code walkthrough,
-            results) sẽ được cập nhật khi project hoàn thành. Theo dõi tiến độ
-            tại GitHub.
-          </p>
-        </div>
-      </div>
-
-      <aside class="md:col-span-1">
-        <div class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm space-y-4">
-          <div>
-            <h3 class="text-xs uppercase tracking-wider text-slate-500 mb-2 font-medium">
-              {t(lang, 'projects.techStack')}
-            </h3>
-            <ul class="flex flex-wrap gap-1.5">
-              {
-                project.techStack.map((tech) => (
-                  <li class="text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-700">
-                    {tech}
-                  </li>
-                ))
-              }
-            </ul>
+    {
+      hasFullCase ? (
+        <>
+          <Hero
+            title={entry!.data.title}
+            tagline={entry!.data.tagline}
+            problem={entry!.data.problem}
+            outcome={entry!.data.outcome}
+            techStack={entry!.data.techStack}
+            kpis={entry!.data.kpis}
+            status={entry!.data.status}
+            statusLabel={statusLabel}
+            repoUrl={entry!.data.repoUrl}
+            demoUrl={entry!.data.demoUrl}
+          />
+          <Content />
+        </>
+      ) : (
+        <div class="py-8 md:py-12">
+          <div class="flex items-start justify-between gap-4">
+            <h1 class="text-3xl md:text-5xl font-bold text-slate-900">
+              {project.title[lang]}
+            </h1>
+            <span
+              class={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${fallbackStatusClass}`}
+            >
+              {statusLabel}
+            </span>
           </div>
 
-          {
-            project.repoUrl && (
-              <a
-                href={project.repoUrl}
-                target="_blank"
-                rel="noopener"
-                class="block w-full text-center bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-2 rounded-lg transition-colors"
-              >
-                {t(lang, 'projects.viewRepo')} ↗
-              </a>
-            )
-          }
+          <p class="mt-4 text-lg text-slate-700 max-w-3xl">
+            {project.tagline[lang]}
+          </p>
+
+          <div class="mt-8 grid gap-8 md:grid-cols-3">
+            <div class="md:col-span-2">
+              <h2 class="text-xl font-semibold text-slate-900 mb-3">Mô tả</h2>
+              <p class="text-slate-700 leading-relaxed">
+                {project.description[lang]}
+              </p>
+
+              <h2 class="text-xl font-semibold text-slate-900 mt-8 mb-3">
+                Điểm nổi bật
+              </h2>
+              <ul class="space-y-2">
+                {project.highlights[lang].map((h) => (
+                  <li class="flex gap-2 text-slate-700">
+                    <span class="text-indigo-500 shrink-0">▸</span>
+                    <span>{h}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <div class="mt-8 rounded-lg border border-dashed border-slate-300 bg-white/60 p-6">
+                <p class="text-sm text-slate-500">
+                  🚧 Case study chi tiết (kèm chart, code, results) sẽ được cập
+                  nhật khi project hoàn thành. Theo dõi tiến độ tại GitHub.
+                </p>
+              </div>
+            </div>
+
+            <aside class="md:col-span-1">
+              <div class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+                <div>
+                  <h3 class="text-xs uppercase tracking-wider text-slate-500 mb-2 font-medium">
+                    {t(lang, 'projects.techStack')}
+                  </h3>
+                  <ul class="flex flex-wrap gap-1.5">
+                    {project.techStack.map((tech) => (
+                      <li class="text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                        {tech}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </aside>
+          </div>
         </div>
-      </aside>
-    </div>
+      )
+    }
   </article>
+
+  {
+    hasFullCase && (
+      <script is:inline>
+        {`
+        (function initVegaCharts() {
+          var specs = document.querySelectorAll('script[type="application/json"][data-vega-spec]');
+          if (specs.length === 0) return;
+          import('https://cdn.jsdelivr.net/npm/vega-embed@6/+esm').then(function(mod) {
+            var embed = mod.default;
+            specs.forEach(function(scriptEl) {
+              var id = scriptEl.dataset.vegaSpec;
+              var target = document.querySelector('[data-vega-target="' + id + '"]');
+              if (!target) return;
+              try {
+                var spec = JSON.parse(scriptEl.textContent || '{}');
+                target.innerHTML = '';
+                embed(target, spec, { actions: false, renderer: 'svg' });
+              } catch (e) {
+                console.error('Vega render error for', id, e);
+              }
+            });
+          }).catch(function(e) { console.error('vega-embed load failed', e); });
+        })();
+        `}
+      </script>
+    )
+  }
 </Layout>
