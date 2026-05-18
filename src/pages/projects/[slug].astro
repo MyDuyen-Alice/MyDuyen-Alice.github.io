@@ -137,31 +137,28 @@ const fallbackStatusClass = {
     }
   </article>
 
-  {
-    hasFullCase && (
-      <script is:inline>
-        {`
-        (function initVegaCharts() {
-          var specs = document.querySelectorAll('script[type="application/json"][data-vega-spec]');
-          if (specs.length === 0) return;
-          import('https://cdn.jsdelivr.net/npm/vega-embed@6/+esm').then(function(mod) {
-            var embed = mod.default;
-            specs.forEach(function(scriptEl) {
-              var id = scriptEl.dataset.vegaSpec;
-              var target = document.querySelector('[data-vega-target="' + id + '"]');
-              if (!target) return;
-              try {
-                var spec = JSON.parse(scriptEl.textContent || '{}');
-                target.innerHTML = '';
-                embed(target, spec, { actions: false, renderer: 'svg' });
-              } catch (e) {
-                console.error('Vega render error for', id, e);
-              }
-            });
-          }).catch(function(e) { console.error('vega-embed load failed', e); });
-        })();
-        `}
-      </script>
-    )
-  }
 </Layout>
+
+<script is:inline>
+  (function initVegaCharts() {
+    var specs = document.querySelectorAll('script[type="application/json"][data-vega-spec]');
+    if (specs.length === 0) return;
+    import('https://cdn.jsdelivr.net/npm/vega-embed@6/+esm').then(function (mod) {
+      var embed = mod.default;
+      specs.forEach(function (scriptEl) {
+        var id = scriptEl.dataset.vegaSpec;
+        var target = document.querySelector('[data-vega-target="' + id + '"]');
+        if (!target) return;
+        try {
+          var spec = JSON.parse(scriptEl.textContent || '{}');
+          target.innerHTML = '';
+          embed(target, spec, { actions: false, renderer: 'svg' });
+        } catch (e) {
+          console.error('Vega render error for', id, e);
+        }
+      });
+    }).catch(function (e) {
+      console.error('vega-embed load failed', e);
+    });
+  })();
+</script>
