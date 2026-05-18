@@ -9,6 +9,10 @@ import mdx from '@astrojs/mdx';
 export default defineConfig({
   site: 'https://myduyen-alice.github.io',
 
+  markdown: {
+    shikiConfig: { theme: 'github-light', wrap: true },
+  },
+
   vite: {
     plugins: [tailwindcss()]
   },

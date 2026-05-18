@@ -36,10 +36,63 @@ import MetricsTable from '../../../components/case-study/MetricsTable.astro'
 import ConfusionMatrix from '../../../components/case-study/ConfusionMatrix.astro'
 import Steps from '../../../components/case-study/Steps.astro'
 import VegaChart from '../../../components/case-study/VegaChart.astro'
+import ToolList from '../../../components/case-study/ToolList.astro'
 
 <Callout variant="sample" title="Project đang phát triển">
 Tất cả số liệu trong case study này là **placeholder realistic** dựa trên benchmark công khai của Telco Customer Churn dataset. Tôi sẽ thay bằng kết quả thực sau khi hoàn thành training trong tuần 3-5 của roadmap portfolio.
 </Callout>
+
+<Section number="00" title="Phương pháp & Bộ công cụ">
+
+Project áp dụng **CRISP-DM** (*Cross-Industry Standard Process for Data Mining*) — chu trình 6 phase được dùng phổ biến nhất trong industry vì rõ ràng và linh hoạt. Mỗi phase có deliverable cụ thể, dễ stop/revisit khi kết quả chưa tốt. Toàn bộ pipeline được tổ chức trong **notebooks/** (cho exploration) + **src/** (cho code tái sử dụng) + **app/** (cho Streamlit demo) — pattern chuẩn của Cookiecutter Data Science.
+
+<Steps
+  steps={[
+    {
+      title: '1. Business Understanding',
+      body: 'Hiểu vì sao team Marketing cần predictor (giảm cost retention), xác định metric business (Lift @ Top 30%) và metric technical (ROC AUC, F1 lớp Churn).',
+    },
+    {
+      title: '2. Data Understanding',
+      body: 'Load dataset Telco Churn từ Kaggle, kiểm tra shape, dtypes, missing values. Plot phân bố target và mỗi feature. Lập 5-7 finding mở đường cho phần sau.',
+    },
+    {
+      title: '3. Data Preparation',
+      body: 'Impute missing (TotalCharges null khi tenure=0 → 0), One-Hot Encode 16 categorical, StandardScaler 3 numeric. Đóng gói thành sklearn Pipeline để tránh leakage và tái sử dụng được trong Streamlit.',
+    },
+    {
+      title: '4. Modeling',
+      body: 'Benchmark 5 algorithms (Logistic, Random Forest, XGBoost, LightGBM, CatBoost) bằng 5-fold stratified CV. Tune top performer với Optuna 50-trial TPE sampler.',
+    },
+    {
+      title: '5. Evaluation',
+      body: 'Predict trên test set (chưa từng thấy), tính ROC AUC + F1 + precision + recall. Vẽ ROC curve + threshold tuning để pick threshold tối ưu cho business (F1 hoặc cost-sensitive). Diễn giải drivers bằng SHAP TreeExplainer.',
+    },
+    {
+      title: '6. Deployment',
+      body: 'Save preprocessor + model với joblib. Wrap thành Streamlit form (15 input → predict + show top 3 SHAP drivers). Push GitHub, deploy lên Streamlit Community Cloud free tier — không tốn xu nào.',
+    },
+  ]}
+/>
+
+<MetricsTable
+  headers={['Phase', 'Tools chính', 'Output']}
+  rows={[
+    { cells: ['Business Understanding', 'Notion / Markdown', 'Problem statement, success metrics'] },
+    { cells: ['Data Understanding (EDA)', 'pandas · matplotlib · seaborn · Jupyter', '01-eda.ipynb + findings'] },
+    { cells: ['Data Preparation', 'scikit-learn (ColumnTransformer, Pipeline)', 'preprocessing.py module'] },
+    { cells: ['Modeling', 'scikit-learn · xgboost · lightgbm · optuna', 'Trained .joblib + leaderboard'] },
+    { cells: ['Evaluation', 'sklearn.metrics · shap · Vega-Lite', 'Test metrics + ROC + SHAP report'] },
+    { cells: ['Deployment', 'joblib · Streamlit · GitHub · Streamlit Cloud', 'Live web demo URL'] },
+  ]}
+  caption="6 phase CRISP-DM với tool và output cụ thể của từng giai đoạn."
+/>
+
+<Callout variant="info" title="Vì sao chọn stack này">
+Toàn bộ open source + free tier: **pandas/scikit-learn** là chuẩn de facto Python DS; **LightGBM/XGBoost** mạnh nhất cho tabular data có signal categorical; **Optuna** tune nhanh gấp 3-5× GridSearch; **SHAP** là chuẩn industry cho model explainability; **Streamlit** deploy demo trong ~50 dòng code và 1-click lên Cloud. Zero chi phí, zero vendor lock-in.
+</Callout>
+
+</Section>
 
 <Section number="01" title="Bối cảnh nghiệp vụ">
 
@@ -205,6 +258,23 @@ Scatter `tenure` vs `MonthlyCharges` cho thấy 2 cluster rõ: **khách trả nh
 3 features có signal mạnh nhất: **Contract**, **tenure**, **MonthlyCharges**. Một mô hình tốt phải bắt được tương tác giữa chúng (interaction effects) — gợi ý dùng tree-based methods như XGBoost/LightGBM.
 </Callout>
 
+<Callout variant="info" title="🛠 Cách làm EDA — 4 bước">
+1. **Load + inspect schema:** `df.shape`, `df.dtypes`, `df.head()`, `df.describe(include='all')` để hiểu kích thước, kiểu dữ liệu, giá trị thống kê cơ bản.
+2. **Check missing & data quality:** `df.isna().sum()`, kiểm tra giá trị bất thường (TotalCharges là string vì có blank → coerce numeric).
+3. **Univariate analysis:** histogram cho numeric, count plot cho categorical → hiểu phân bố từng feature riêng lẻ.
+4. **Bivariate vs target:** group by categorical → mean(churn_flag), overlay histogram numeric theo Churn → ra "churn rate per group" và separability.
+</Callout>
+
+<ToolList
+  tools={[
+    { name: 'pandas', role: 'DataFrame, group-by, missing check', url: 'https://pandas.pydata.org' },
+    { name: 'matplotlib', role: 'Plot cơ bản: hist, boxplot', url: 'https://matplotlib.org' },
+    { name: 'seaborn', role: 'Thống kê plot đẹp: countplot, kdeplot', url: 'https://seaborn.pydata.org' },
+    { name: 'JupyterLab', role: 'Notebook để iterate nhanh', url: 'https://jupyter.org' },
+    { name: 'ydata-profiling', role: 'EDA report auto trong 1 dòng (optional)', url: 'https://github.com/ydataai/ydata-profiling' },
+  ]}
+/>
+
 </Section>
 
 <Section number="04" title="Feature engineering">
@@ -248,6 +318,17 @@ preprocessor = ColumnTransformer(transformers=[
 ])
 ```
 
+<ToolList
+  title="🛠 Tools dùng ở phase này"
+  tools={[
+    { name: 'ColumnTransformer', role: 'Áp khác pipeline cho numeric vs categorical', url: 'https://scikit-learn.org/stable/modules/generated/sklearn.compose.ColumnTransformer.html' },
+    { name: 'SimpleImputer', role: 'Fill missing: median (num) / most_frequent (cat)', url: 'https://scikit-learn.org/stable/modules/generated/sklearn.impute.SimpleImputer.html' },
+    { name: 'OneHotEncoder', role: 'Encode 16 categorical thành 45 binary cols', url: 'https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.OneHotEncoder.html' },
+    { name: 'StandardScaler', role: 'Chuẩn hoá numeric về mean=0, std=1', url: 'https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html' },
+    { name: 'Pipeline', role: 'Đảm bảo cùng transform train + test + Streamlit', url: 'https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html' },
+  ]}
+/>
+
 </Section>
 
 <Section number="05" title="So sánh các thuật toán">
@@ -269,6 +350,24 @@ Tôi benchmark 5 thuật toán với **5-fold stratified cross-validation** trê
 <Callout variant="info" title="Hyperparameter tuning">
 LightGBM được tune với **Optuna** (50 trials, TPE sampler) trên các tham số: `num_leaves`, `learning_rate`, `min_child_samples`, `reg_alpha`, `reg_lambda`. Best config tăng ROC AUC từ 0.823 → 0.841.
 </Callout>
+
+<Callout variant="info" title="🛠 Cách làm Modeling — 4 bước">
+1. **Setup 5-fold stratified CV** với `StratifiedKFold(n_splits=5, shuffle=True, random_state=42)` — đảm bảo mỗi fold giữ tỷ lệ Churn ~26.5%.
+2. **Benchmark 5 algos** cùng cấu hình mặc định, log ROC AUC + F1 cho mỗi fold rồi mean ± std. Mục đích: pick 2 finalist (LightGBM + XGBoost).
+3. **Define search space + objective function** cho Optuna: `objective(trial)` train với hyperparams từ `trial.suggest_*()`, return mean CV ROC AUC. Run 50 trials với TPE sampler.
+4. **Refit best config trên TOÀN BỘ train set** rồi save model `.joblib`. Đánh giá cuối cùng chỉ trên test set ở Section 06.
+</Callout>
+
+<ToolList
+  tools={[
+    { name: 'scikit-learn', role: 'LogisticRegression, RandomForest, StratifiedKFold, cross_val_score', url: 'https://scikit-learn.org' },
+    { name: 'XGBoost', role: 'Gradient boosting, tốt cho tabular', url: 'https://xgboost.readthedocs.io' },
+    { name: 'LightGBM', role: 'Nhanh hơn XGBoost, accuracy tương đương', url: 'https://lightgbm.readthedocs.io' },
+    { name: 'CatBoost', role: 'Handle categorical native, không cần OHE', url: 'https://catboost.ai' },
+    { name: 'Optuna', role: 'TPE Bayesian tuning, nhanh hơn GridSearch 3-5×', url: 'https://optuna.org' },
+    { name: 'joblib', role: 'Save trained model + preprocessor', url: 'https://joblib.readthedocs.io' },
+  ]}
+/>
 
 </Section>
 
@@ -374,6 +473,22 @@ Trên **test set** (1,409 khách hàng — chưa từng thấy trong training), 
 Nếu team Marketing chỉ chạy retention cho **30% khách hàng có score cao nhất**, model bắt được **70% churners** — so với random target chỉ ra **30%**. Tức **hiệu quả tăng 2.3×**, ROI rõ ràng để pitch business.
 </Callout>
 
+<Callout variant="info" title="🛠 Cách làm Evaluation — 4 bước">
+1. **Predict trên test set** chưa từng thấy: `y_pred = model.predict(X_test)` và `y_proba = model.predict_proba(X_test)[:, 1]` (cần proba để tune threshold sau).
+2. **Tính metrics ở threshold mặc định 0.5:** `classification_report(y_test, y_pred)` ra precision/recall/F1, `roc_auc_score(y_test, y_proba)` ra AUC.
+3. **Vẽ confusion matrix** với `confusion_matrix()` để hiểu kiểu lỗi (FP vs FN). FP cost = chạy campaign nhầm; FN cost = mất khách → cost-sensitive threshold.
+4. **Sweep threshold 0.1 → 0.9** với `precision_recall_curve()`, plot 3 đường (P/R/F1) → pick threshold tối ưu cho mục tiêu business (max F1, hoặc theo cost matrix).
+</Callout>
+
+<ToolList
+  tools={[
+    { name: 'sklearn.metrics', role: 'roc_auc_score, classification_report, confusion_matrix', url: 'https://scikit-learn.org/stable/modules/classes.html#module-sklearn.metrics' },
+    { name: 'precision_recall_curve', role: 'Sweep threshold cho P/R analysis', url: 'https://scikit-learn.org/stable/modules/generated/sklearn.metrics.precision_recall_curve.html' },
+    { name: 'NumPy', role: 'Vectorized threshold sweep, argmax F1', url: 'https://numpy.org' },
+    { name: 'Vega-Lite', role: 'Render ROC + threshold chart interactive', url: 'https://vega.github.io/vega-lite/' },
+  ]}
+/>
+
 </Section>
 
 <Section number="07" title="SHAP — drivers chính của churn">
@@ -419,6 +534,20 @@ Nếu team Marketing chỉ chạy retention cho **30% khách hàng có score cao
 2. **Khách mới (tenure thấp) + hoá đơn cao** = nhóm tử thần. Cần onboarding tốt + check-in proactive sau tháng 2.
 3. **Khách không có `OnlineSecurity` và `TechSupport`** churn cao bất thường → có thể package chúng vào gói cơ bản free trial 3 tháng để giảm friction.
 
+<Callout variant="info" title="🛠 Cách làm Interpretation — 3 bước">
+1. **Tạo explainer:** `explainer = shap.TreeExplainer(model)` — TreeExplainer là phiên bản tối ưu cho tree-based models (LightGBM, XGBoost), tính SHAP exact + nhanh.
+2. **Tính SHAP values cho test set:** `shap_values = explainer.shap_values(X_test_transformed)` — output là ma trận (n_samples × n_features) cho impact của từng feature lên từng prediction.
+3. **Global importance** = `np.abs(shap_values).mean(axis=0)` → sort descending → top 10 features ranking. Local interpretation cho 1 prediction: `shap.force_plot(explainer.expected_value, shap_values[i], X_test.iloc[i])`.
+</Callout>
+
+<ToolList
+  tools={[
+    { name: 'shap', role: 'Tính SHAP values + visualize (summary/waterfall/force)', url: 'https://shap.readthedocs.io' },
+    { name: 'TreeExplainer', role: 'Fast SHAP cho tree models, không cần sample', url: 'https://shap.readthedocs.io/en/latest/generated/shap.TreeExplainer.html' },
+    { name: 'matplotlib', role: 'Render SHAP plots (summary, waterfall)', url: 'https://matplotlib.org' },
+  ]}
+/>
+
 </Section>
 
 <Section number="08" title="Deployment — Streamlit demo">
@@ -447,6 +576,24 @@ if st.button('Predict'):
     st.metric('Churn probability', f'{proba:.1%}')
     explain_with_shap(model, input_df)  # show top 3 drivers
 ```
+
+<Callout variant="info" title="🛠 Cách làm Deployment — 5 bước">
+1. **Persist pipeline:** `joblib.dump(full_pipeline, 'models/lightgbm_churn.joblib')` — save cả preprocessor + model trong 1 object để Streamlit chỉ load 1 file, predict 1 dòng.
+2. **Build Streamlit form:** dùng `st.slider`, `st.selectbox`, `st.radio` cho 15 input (mỗi feature 1 widget). Collect → assemble thành DataFrame 1 row đúng schema.
+3. **Test local:** `streamlit run app/streamlit_app.py` → mở `http://localhost:8501`, sanity check predict + SHAP explanation hiển thị đúng.
+4. **Push GitHub:** đảm bảo `requirements.txt` đầy đủ (streamlit, joblib, lightgbm, shap, pandas, scikit-learn). Test fresh clone build pass.
+5. **Deploy Streamlit Cloud:** đăng nhập [share.streamlit.io](https://share.streamlit.io) bằng GitHub → New app → chọn repo + branch + path `app/streamlit_app.py` → Deploy. Sau 2-3 phút có URL public dạng `<app>.streamlit.app`.
+</Callout>
+
+<ToolList
+  tools={[
+    { name: 'joblib', role: 'Serialize pipeline (preprocessor + model)', url: 'https://joblib.readthedocs.io' },
+    { name: 'Streamlit', role: 'Web app trong ~50 dòng Python', url: 'https://streamlit.io' },
+    { name: 'streamlit-shap', role: 'Embed SHAP force plot interactive', url: 'https://github.com/snehankekre/streamlit-shap' },
+    { name: 'GitHub', role: 'Source repo + version control', url: 'https://github.com' },
+    { name: 'Streamlit Community Cloud', role: 'Deploy free, auto-build từ GitHub', url: 'https://streamlit.io/cloud' },
+  ]}
+/>
 
 </Section>
 
