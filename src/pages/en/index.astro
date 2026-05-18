@@ -10,42 +10,42 @@ const currentPath = '/en';
 
 <Layout lang={lang} title={t(lang, 'nav.home')} currentPath={currentPath}>
   <section class="py-12 md:py-20">
-    <p class="text-emerald-400 mb-3 text-sm uppercase tracking-wider">
+    <p class="text-indigo-600 mb-3 text-sm uppercase tracking-wider font-medium">
       {t(lang, 'hero.title')}
     </p>
-    <h1 class="text-4xl md:text-6xl font-bold tracking-tight text-white mb-4">
+    <h1 class="text-4xl md:text-6xl font-bold tracking-tight text-slate-900 mb-4">
       {t(lang, 'hero.name')}
     </h1>
-    <p class="text-xl md:text-2xl text-slate-300 mb-6">
+    <p class="text-xl md:text-2xl text-slate-700 mb-6">
       {t(lang, 'hero.role')}
     </p>
-    <p class="text-slate-400 max-w-2xl text-lg leading-relaxed mb-8">
+    <p class="text-slate-600 max-w-2xl text-lg leading-relaxed mb-8">
       {t(lang, 'hero.pitch')}
     </p>
     <div class="flex flex-wrap gap-3">
       <a
         href={pathFor(lang, 'projects')}
-        class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-medium px-5 py-2.5 rounded-lg transition-colors"
+        class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-5 py-2.5 rounded-lg shadow-sm shadow-indigo-600/20 transition-colors"
       >
         {t(lang, 'hero.cta.projects')}
       </a>
       <a
         href="/cv.pdf"
-        class="border border-slate-700 hover:border-emerald-500 text-slate-200 px-5 py-2.5 rounded-lg transition-colors"
+        class="border border-slate-300 hover:border-indigo-400 hover:text-indigo-600 text-slate-700 bg-white px-5 py-2.5 rounded-lg transition-colors"
       >
         {t(lang, 'hero.cta.cv')}
       </a>
     </div>
   </section>
 
-  <section class="py-12 border-t border-slate-800">
+  <section class="py-12 border-t border-slate-200">
     <div class="flex items-end justify-between mb-8">
-      <h2 class="text-2xl md:text-3xl font-bold text-white">
+      <h2 class="text-2xl md:text-3xl font-bold text-slate-900">
         {t(lang, 'projects.title')}
       </h2>
       <a
         href={pathFor(lang, 'projects')}
-        class="text-emerald-400 hover:text-emerald-300 text-sm"
+        class="text-indigo-600 hover:text-indigo-500 text-sm font-medium"
       >
         {t(lang, 'projects.title')} →
       </a>

@@ -9,7 +9,7 @@ interface Props {
 const { lang } = Astro.props;
 ---
 
-<footer class="border-t border-slate-800 mt-16">
+<footer class="border-t border-slate-200 mt-16 bg-white/60">
   <div class="mx-auto max-w-5xl px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500">
     <p>{t(lang, 'footer.year')}</p>
     <p>{t(lang, 'footer.built')}</p>
@@ -18,19 +18,19 @@ const { lang } = Astro.props;
         href="https://github.com/myduyen790902-commits"
         target="_blank"
         rel="noopener"
-        class="hover:text-emerald-400 transition-colors"
+        class="hover:text-indigo-600 transition-colors"
         >GitHub</a
       >
       <a
         href="https://www.linkedin.com/in/m%E1%BB%B9-duy%C3%AAn-2220443a4/"
         target="_blank"
         rel="noopener"
-        class="hover:text-emerald-400 transition-colors"
+        class="hover:text-indigo-600 transition-colors"
         >LinkedIn</a
       >
       <a
         href="mailto:myduyen790902@gmail.com"
-        class="hover:text-emerald-400 transition-colors"
+        class="hover:text-indigo-600 transition-colors"
         >Email</a
       >
     </div>

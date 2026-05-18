@@ -145,8 +145,8 @@ export const skills = {
 export const timeline: Array<{ date: string; vi: string; en: string }> = [
   {
     date: '2026-05',
-    vi: 'Bắt đầu hành trình Data Engineering, xây dựng portfolio và 3 dự án end-to-end.',
-    en: 'Started the Data Engineering journey, building this portfolio and 3 end-to-end projects.',
+    vi: 'Bắt đầu hành trình Data Science, xây dựng portfolio và 3 dự án end-to-end.',
+    en: 'Started the Data Science journey, building this portfolio and 3 end-to-end projects.',
   },
   {
     date: '2026-04',

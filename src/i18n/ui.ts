@@ -18,15 +18,15 @@ export const ui = {
 
     'hero.title': 'Xin chào, tôi là',
     'hero.name': 'Lương Thị Mỹ Duyên',
-    'hero.role': 'Aspiring Data Engineer',
+    'hero.role': 'Aspiring Data Scientist',
     'hero.pitch':
-      'Tôi là người trái ngành đang tự học Data Engineering — xây dựng pipeline, mô hình hóa dữ liệu, và đưa data trở thành công cụ ra quyết định.',
+      'Tôi là người trái ngành đang tự học Data Science — phân tích dữ liệu, xây dựng mô hình, và biến data thành insight ra quyết định.',
     'hero.cta.projects': 'Xem dự án',
     'hero.cta.cv': 'Tải CV',
 
     'about.title': 'Hành trình của tôi',
     'about.intro':
-      'Tôi chuyển hướng sang Data Engineering vì tin rằng dữ liệu là nền tảng của mọi quyết định tốt. Tôi đang xây dựng portfolio thực tế thay vì chỉ học lý thuyết.',
+      'Tôi chuyển hướng sang Data Science vì tin rằng dữ liệu là nền tảng của mọi quyết định tốt. Tôi đang xây dựng portfolio thực tế thay vì chỉ học lý thuyết.',
     'about.skills.title': 'Kỹ năng',
     'about.timeline.title': 'Quá trình học',
 
@@ -47,7 +47,7 @@ export const ui = {
 
     'contact.title': 'Liên hệ',
     'contact.subtitle':
-      'Đang tìm cơ hội Fresher/Intern Data Engineer. Hãy kết nối với tôi!',
+      'Đang tìm cơ hội Fresher/Intern Data Scientist. Hãy kết nối với tôi!',
     'contact.email': 'Email',
     'contact.github': 'GitHub',
     'contact.linkedin': 'LinkedIn',
@@ -65,15 +65,15 @@ export const ui = {
 
     'hero.title': "Hi, I'm",
     'hero.name': 'Luong Thi My Duyen',
-    'hero.role': 'Aspiring Data Engineer',
+    'hero.role': 'Aspiring Data Scientist',
     'hero.pitch':
-      'Career-changer self-learning Data Engineering — building pipelines, modeling data, and turning raw data into decisions.',
+      'Career-changer self-learning Data Science — analyzing data, building models, and turning raw data into insight.',
     'hero.cta.projects': 'View Projects',
     'hero.cta.cv': 'Download CV',
 
     'about.title': 'My Journey',
     'about.intro':
-      "I'm transitioning into Data Engineering because I believe data is the foundation of every good decision. I'm building a real-world portfolio instead of just consuming theory.",
+      "I'm transitioning into Data Science because I believe data is the foundation of every good decision. I'm building a real-world portfolio instead of just consuming theory.",
     'about.skills.title': 'Skills',
     'about.timeline.title': 'Learning Path',
 
@@ -95,7 +95,7 @@ export const ui = {
 
     'contact.title': 'Contact',
     'contact.subtitle':
-      "Looking for Fresher/Intern Data Engineer opportunities. Let's connect!",
+      "Looking for Fresher/Intern Data Scientist opportunities. Let's connect!",
     'contact.email': 'Email',
     'contact.github': 'GitHub',
     'contact.linkedin': 'LinkedIn',
