@@ -32,7 +32,7 @@ export const ui = {
 
     'projects.title': 'Dự án',
     'projects.subtitle':
-      'Ba dự án end-to-end thể hiện khả năng xây dựng data pipeline từ extract đến analytics.',
+      'Ba dự án Machine Learning end-to-end: dự đoán churn, phân tích cảm xúc NLP, và dự báo time series.',
     'projects.viewRepo': 'Xem GitHub',
     'projects.viewCase': 'Đọc case study',
     'projects.techStack': 'Tech stack',
@@ -79,7 +79,7 @@ export const ui = {
 
     'projects.title': 'Projects',
     'projects.subtitle':
-      'Three end-to-end projects demonstrating the ability to build data pipelines from extract to analytics.',
+      'Three end-to-end Machine Learning projects: churn prediction, NLP sentiment analysis, and time series forecasting.',
     'projects.viewRepo': 'View on GitHub',
     'projects.viewCase': 'Read case study',
     'projects.techStack': 'Tech stack',
