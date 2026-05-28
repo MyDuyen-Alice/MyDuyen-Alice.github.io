@@ -18,21 +18,21 @@ export const ui = {
 
     'hero.title': 'Xin chào, tôi là',
     'hero.name': 'Lương Thị Mỹ Duyên',
-    'hero.role': 'Aspiring Data Scientist',
+    'hero.role': 'Aspiring Data Analyst',
     'hero.pitch':
-      'Tôi là người trái ngành đang tự học Data Science — phân tích dữ liệu, xây dựng mô hình, và biến data thành insight ra quyết định.',
+      'Tôi là người trái ngành đang tự học Data Analytics — biến dữ liệu thô thành dashboard & insight giúp doanh nghiệp ra quyết định tốt hơn.',
     'hero.cta.projects': 'Xem dự án',
     'hero.cta.cv': 'Tải CV',
 
     'about.title': 'Hành trình của tôi',
     'about.intro':
-      'Tôi chuyển hướng sang Data Science vì tin rằng dữ liệu là nền tảng của mọi quyết định tốt. Tôi đang xây dựng portfolio thực tế thay vì chỉ học lý thuyết.',
+      'Tôi chuyển hướng sang Data Analytics vì tin rằng dữ liệu là nền tảng của mọi quyết định tốt. Tôi đang xây dựng portfolio thực tế thay vì chỉ học lý thuyết.',
     'about.skills.title': 'Kỹ năng',
     'about.timeline.title': 'Quá trình học',
 
     'projects.title': 'Dự án',
     'projects.subtitle':
-      'Ba dự án Machine Learning end-to-end: dự đoán churn, phân tích cảm xúc NLP, và dự báo time series.',
+      'Bốn dự án Data Analytics: SQL analysis, Power BI dashboard, customer segmentation và business insights.',
     'projects.viewRepo': 'Xem GitHub',
     'projects.viewCase': 'Đọc case study',
     'projects.techStack': 'Tech stack',
@@ -47,7 +47,7 @@ export const ui = {
 
     'contact.title': 'Liên hệ',
     'contact.subtitle':
-      'Đang tìm cơ hội Fresher/Intern Data Scientist. Hãy kết nối với tôi!',
+      'Đang tìm cơ hội Fresher/Intern Data Analyst. Hãy kết nối với tôi!',
     'contact.email': 'Email',
     'contact.github': 'GitHub',
     'contact.linkedin': 'LinkedIn',
@@ -65,21 +65,21 @@ export const ui = {
 
     'hero.title': "Hi, I'm",
     'hero.name': 'Luong Thi My Duyen',
-    'hero.role': 'Aspiring Data Scientist',
+    'hero.role': 'Aspiring Data Analyst',
     'hero.pitch':
-      'Career-changer self-learning Data Science — analyzing data, building models, and turning raw data into insight.',
+      'Career-changer self-learning Data Analytics — turning raw data into dashboards and insights that drive better business decisions.',
     'hero.cta.projects': 'View Projects',
     'hero.cta.cv': 'Download CV',
 
     'about.title': 'My Journey',
     'about.intro':
-      "I'm transitioning into Data Science because I believe data is the foundation of every good decision. I'm building a real-world portfolio instead of just consuming theory.",
+      "I'm transitioning into Data Analytics because I believe data is the foundation of every good decision. I'm building a real-world portfolio instead of just consuming theory.",
     'about.skills.title': 'Skills',
     'about.timeline.title': 'Learning Path',
 
     'projects.title': 'Projects',
     'projects.subtitle':
-      'Three end-to-end Machine Learning projects: churn prediction, NLP sentiment analysis, and time series forecasting.',
+      'Four Data Analytics projects: SQL analysis, Power BI dashboards, customer segmentation, and business insights.',
     'projects.viewRepo': 'View on GitHub',
     'projects.viewCase': 'Read case study',
     'projects.techStack': 'Tech stack',
@@ -95,7 +95,7 @@ export const ui = {
 
     'contact.title': 'Contact',
     'contact.subtitle':
-      "Looking for Fresher/Intern Data Scientist opportunities. Let's connect!",
+      "Looking for Fresher/Intern Data Analyst opportunities. Let's connect!",
     'contact.email': 'Email',
     'contact.github': 'GitHub',
     'contact.linkedin': 'LinkedIn',
